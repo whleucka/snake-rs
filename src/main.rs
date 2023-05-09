@@ -12,17 +12,27 @@ pub struct Seg {
     color: Color,
 }
 
-impl Seg {
-    pub fn new() -> Self {
+impl Default for Seg {
+    fn default() -> Self {
         Self {
             dx: 1,
             dy: 0,
-            x: 50.0,
-            y: 50.0,
+            x: screen_width() / 2.0f32,
+            y: screen_height(),
             sides: 4,
             radius: 10.0,
             rotation: 45.0,
             color: GREEN,
+        }
+    }
+}
+
+impl Seg {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self {
+            x,
+            y,
+            ..Default::default()
         }
     }
 }
@@ -33,6 +43,8 @@ pub struct Snake {
     body: Option<Vec<Seg>>,
 }
 
+impl Snake {}
+
 #[derive(Debug)]
 pub struct Game {
     snake: Snake,
@@ -42,13 +54,16 @@ impl Game {
     pub fn new() -> Self {
         Self {
             snake: Snake {
-                head: Seg::new(),
+                head: Seg {
+                    color: GREEN,
+                    ..Default::default()
+                },
                 body: Some(Vec::<Seg>::new()),
             },
         }
     }
-    pub fn add_segment(&mut self) {
-        self.snake.body.as_mut().unwrap().push(Seg::new());
+    pub fn add_segment(&mut self, x: f32, y: f32) {
+        self.snake.body.as_mut().unwrap().push(Seg::new(x, y));
     }
     pub fn up(&mut self) {
         self.snake.head.dx = 0;
@@ -71,10 +86,12 @@ impl Game {
 #[macroquad::main("BasicShapes")]
 async fn main() {
     let mut game = Game::new();
-    game.add_segment();
 
     loop {
         clear_background(BLACK);
+
+        ///////////////////////////////////////////////////////////////////////
+        // MOVEMENT
         // Player movement
         if is_key_down(KeyCode::J) {
             game.down();
@@ -86,24 +103,24 @@ async fn main() {
             game.right();
         }
         // Move segments
-        game.snake
-            .body
-            .iter_mut()
-            .flatten()
-            .enumerate()
-            .for_each(|(i, snake)| {
-                if i == 0 {
-                    snake.x = game.snake.head.x;
-                    snake.y = game.snake.head.y;
-                } else {
-                    // Can't do this
-                    //snake.x = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().x;
-                    //snake.y = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().y;
-                }
-            });
-        // Moving the head x,y position
+        let segs = game.snake.body.as_mut().unwrap();
+        for i in 0..segs.len() {
+            if i == 0 {
+                // Copy the head x,y
+                segs[i].x = game.snake.head.x;
+                segs[i].y = game.snake.head.y;
+            } else {
+                // Copy the previous seg x,y
+                segs[i].x = segs[i - 1].x;
+                segs[i].y = segs[i - 1].y;
+            }
+        }
+
+        // Always keep the snake moving
         game.snake.head.x += game.snake.head.radius * game.snake.head.dx as f32;
         game.snake.head.y += game.snake.head.radius * game.snake.head.dy as f32;
+
+        // Wrap the snake around the screen width,height
         if game.snake.head.x < 0.0 {
             game.snake.head.x = screen_width();
         } else if game.snake.head.x > screen_width() {
@@ -115,7 +132,9 @@ async fn main() {
             game.snake.head.y = 0.0;
         }
 
-        // Drawing the snake segments
+        ///////////////////////////////////////////////////////////////////////
+        // DRAWING
+        // Drawing the snake head
         draw_poly(
             game.snake.head.x,
             game.snake.head.y,
@@ -124,8 +143,7 @@ async fn main() {
             game.snake.head.rotation,
             game.snake.head.color,
         );
-
-        // Drawing the snake segments
+        // Drawing the snake body segments
         game.snake.body.iter_mut().flatten().for_each(|snake| {
             draw_poly(
                 snake.x,

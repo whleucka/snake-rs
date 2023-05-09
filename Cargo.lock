@@ -317,6 +317,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "prev-iter"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ceacb352f798299b2044f4b9a894e8ef5d21115ccd293a323d44fc665132ec83"
+
+[[package]]
 name = "quad-alsa-sys"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -364,6 +370,7 @@ name = "snake-rs"
 version = "0.1.0"
 dependencies = [
  "macroquad",
+ "prev-iter",
 ]
 
 [[package]]
