@@ -2,7 +2,6 @@ use macroquad::prelude::*;
 
 #[derive(Debug)]
 pub struct Seg {
-    head: bool,
     dx: i8,
     dy: i8,
     x: f32,
@@ -14,9 +13,8 @@ pub struct Seg {
 }
 
 impl Seg {
-    pub fn new(head: bool) -> Self {
+    pub fn new() -> Self {
         Self {
-            head,
             dx: 1,
             dy: 0,
             x: 50.0,
@@ -30,65 +28,50 @@ impl Seg {
 }
 
 #[derive(Debug)]
+pub struct Snake {
+    head: Seg,
+    body: Option<Vec<Seg>>,
+}
+
+#[derive(Debug)]
 pub struct Game {
-    snake: Option<Vec<Seg>>,
+    snake: Snake,
 }
 
 impl Game {
     pub fn new() -> Self {
         Self {
-            snake: Some(Vec::<Seg>::new()),
+            snake: Snake {
+                head: Seg::new(),
+                body: Some(Vec::<Seg>::new()),
+            },
         }
     }
-    pub fn add_segment(&mut self, head: bool) {
-        self.snake.as_mut().unwrap().push(Seg::new(head));
+    pub fn add_segment(&mut self) {
+        self.snake.body.as_mut().unwrap().push(Seg::new());
     }
     pub fn up(&mut self) {
-        self.snake
-            .iter_mut()
-            .flatten()
-            .filter(|x| x.head)
-            .for_each(|head| {
-                head.dx = 0;
-                head.dy = -1;
-            });
+        self.snake.head.dx = 0;
+        self.snake.head.dy = -1;
     }
     pub fn down(&mut self) {
-        self.snake
-            .iter_mut()
-            .flatten()
-            .filter(|x| x.head)
-            .for_each(|head| {
-                head.dx = 0;
-                head.dy = 1;
-            });
+        self.snake.head.dx = 0;
+        self.snake.head.dy = 1;
     }
     pub fn left(&mut self) {
-        self.snake
-            .iter_mut()
-            .flatten()
-            .filter(|x| x.head)
-            .for_each(|head| {
-                head.dx = -1;
-                head.dy = 0;
-            });
+        self.snake.head.dx = -1;
+        self.snake.head.dy = 0;
     }
     pub fn right(&mut self) {
-        self.snake
-            .iter_mut()
-            .flatten()
-            .filter(|x| x.head)
-            .for_each(|head| {
-                head.dx = 1;
-                head.dy = 0;
-            });
+        self.snake.head.dx = 1;
+        self.snake.head.dy = 0;
     }
 }
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
     let mut game = Game::new();
-    game.add_segment(true);
+    game.add_segment();
 
     loop {
         clear_background(BLACK);
@@ -102,23 +85,47 @@ async fn main() {
         } else if is_key_down(KeyCode::L) {
             game.right();
         }
-        // Moving the snake x,y position
-        game.snake.iter_mut().flatten().for_each(|snake| {
-            snake.x += snake.radius * snake.dx as f32;
-            snake.y += snake.radius * snake.dy as f32;
-            if snake.x < 0.0 {
-                snake.x = screen_width();
-            } else if snake.x > screen_width() {
-                snake.x = 0.0;
-            }
-            if snake.y < 0.0 {
-                snake.y = screen_height();
-            } else if snake.y > screen_height() {
-                snake.y = 0.0;
-            }
-        });
+        // Move segments
+        game.snake
+            .body
+            .iter_mut()
+            .flatten()
+            .enumerate()
+            .for_each(|(i, snake)| {
+                if i == 0 {
+                    snake.x = game.snake.head.x;
+                    snake.y = game.snake.head.y;
+                } else {
+                    //snake.x = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().x;
+                    //snake.y = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().y;
+                }
+            });
+        // Moving the head x,y position
+        game.snake.head.x += game.snake.head.radius * game.snake.head.dx as f32;
+        game.snake.head.y += game.snake.head.radius * game.snake.head.dy as f32;
+        if game.snake.head.x < 0.0 {
+            game.snake.head.x = screen_width();
+        } else if game.snake.head.x > screen_width() {
+            game.snake.head.x = 0.0;
+        }
+        if game.snake.head.y < 0.0 {
+            game.snake.head.y = screen_height();
+        } else if game.snake.head.y > screen_height() {
+            game.snake.head.y = 0.0;
+        }
+
         // Drawing the snake segments
-        game.snake.iter_mut().flatten().for_each(|snake| {
+        draw_poly(
+            game.snake.head.x,
+            game.snake.head.y,
+            game.snake.head.sides,
+            game.snake.head.radius,
+            game.snake.head.rotation,
+            game.snake.head.color,
+        );
+
+        // Drawing the snake segments
+        game.snake.body.iter_mut().flatten().for_each(|snake| {
             draw_poly(
                 snake.x,
                 snake.y,
