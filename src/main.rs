@@ -96,6 +96,7 @@ async fn main() {
                     snake.x = game.snake.head.x;
                     snake.y = game.snake.head.y;
                 } else {
+                    // Can't do this
                     //snake.x = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().x;
                     //snake.y = game.snake.body.as_ref().unwrap().get(i + 1).unwrap().y;
                 }
