@@ -4,6 +4,8 @@ use std::{thread, time};
 
 // ~60 FPS
 const DELAY: u64 = 15;
+const NUMBER_APPLES: u32 = 100;
+const NOTO_SANS: &str = "/home/whleucka/.local/share/fonts/Ubuntu Mono Nerd Font Complete.ttf";
 
 #[derive(Debug)]
 pub struct Apple {
@@ -108,6 +110,7 @@ impl Seg {
 
 #[derive(Debug)]
 pub struct Snake {
+    alive: bool,
     direction: String,
     head: Seg,
     body: Option<Vec<Seg>>,
@@ -167,8 +170,8 @@ impl Snake {
         found
     }
     pub fn move_head(&mut self) {
-        self.head.x += self.head.radius * 2.0 as f32 * self.head.dx as f32;
-        self.head.y += self.head.radius * 2.0 as f32 * self.head.dy as f32;
+        self.head.x += self.head.radius as f32 * self.head.dx as f32;
+        self.head.y += self.head.radius as f32 * self.head.dy as f32;
     }
     pub fn move_body(&mut self) {
         let segs = self.body.as_mut().unwrap();
@@ -235,9 +238,9 @@ impl Snake {
             let a = (body.x - self.head.x) as f64;
             let b = (body.y - self.head.y) as f64;
             let distance = f64::sqrt(a.powi(2) + b.powi(2));
-            if distance < body.radius as f64 * 2.0 as f64 {
-                println!("You lose!");
-                std::process::exit(0);
+            if distance < body.radius as f64 {
+                self.alive = false;
+                return ();
             }
         });
     }
@@ -247,13 +250,14 @@ impl Snake {
 pub struct Game {
     snake: Snake,
     apples: Apples,
-    count: i32,
+    count: u32,
 }
 
 impl Game {
     pub fn new() -> Self {
         Self {
             snake: Snake {
+                alive: true,
                 direction: String::from("right"),
                 head: Seg {
                     color: GREEN,
@@ -264,7 +268,7 @@ impl Game {
             apples: Apples {
                 apples: Some(Vec::<Apple>::new()),
             },
-            count: 49,
+            count: NUMBER_APPLES,
         }
     }
     pub fn add_apple(&mut self, x: f32, y: f32) {
@@ -300,14 +304,28 @@ impl Game {
             std::process::exit(0);
         }
     }
+    pub fn display_score(&mut self, font: Font) {
+        let score = format!("SCORE: {}", (NUMBER_APPLES - self.count) * 100);
+        draw_text_ex(
+            &score,
+            10.0,
+            screen_height() - 10.0,
+            TextParams {
+                font_size: 16,
+                font,
+                ..Default::default()
+            },
+        );
+    }
 }
 
-#[macroquad::main("BasicShapes")]
+#[macroquad::main("Snake")]
 async fn main() {
+    // Load fonts, the order you load fonts is the order it uses for lookups
     let mut game = Game::new();
+    let font = load_ttf_font(NOTO_SANS).await.unwrap();
     game.random_apple();
     // Main game loop
-    let mut count: u32 = 0;
     loop {
         clear_background(BLACK);
         // RENDER
@@ -322,11 +340,9 @@ async fn main() {
         game.apples.draw();
         // END GAME
         game.detect_endgame();
-        // TIMER DELAY
-        count += 1;
-        if count % 100 == 0 {
-            println!("FPS: {:.1}", get_fps());
-        }
+        // SCORE
+        game.display_score(font);
+        // SLEEP
         let sleep = time::Duration::from_millis(DELAY);
         thread::sleep(sleep);
         next_frame().await
