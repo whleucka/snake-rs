@@ -118,17 +118,17 @@ pub struct Snake {
 
 impl Snake {
     pub fn up(&mut self) {
-        if &self.direction == "down" {
-            return;
-        }
+        // if &self.direction == "down" {
+        //     return;
+        // }
         self.direction = String::from("up");
         self.head.dx = 0;
         self.head.dy = -1;
     }
     pub fn down(&mut self) {
-        if &self.direction == "up" {
-            return;
-        }
+        // if &self.direction == "up" {
+        //     return;
+        // }
         self.direction = String::from("down");
         self.head.dx = 0;
         self.head.dy = 1;
@@ -301,7 +301,7 @@ impl Game {
     pub fn detect_endgame(&mut self) {
         if self.count <= 0 {
             println!("You win!");
-            std::process::exit(0);
+            self.snake.alive = false;
         }
     }
     pub fn display_score(&mut self, font: Font) {
@@ -312,6 +312,18 @@ impl Game {
             screen_height() - 10.0,
             TextParams {
                 font_size: 16,
+                font,
+                ..Default::default()
+            },
+        );
+    }
+    pub fn game_over(&mut self, font: Font) {
+        draw_text_ex(
+            "GAME OVER",
+            (screen_width() / 2.0) - 100.0,
+            screen_height() / 2.0,
+            TextParams {
+                font_size: 40,
                 font,
                 ..Default::default()
             },
@@ -328,18 +340,23 @@ async fn main() {
     // Main game loop
     loop {
         clear_background(BLACK);
-        // RENDER
-        game.player_movement();
-        game.snake.slither();
-        // SELF COLLISION
-        game.snake.head_collision();
-        // APPLE COLLISION
-        game.apple_collision();
-        // DRAWING
-        game.snake.draw();
-        game.apples.draw();
-        // END GAME
-        game.detect_endgame();
+        if game.snake.alive {
+            // RENDER
+            game.player_movement();
+            game.snake.slither();
+            // SELF COLLISION
+            game.snake.head_collision();
+            // APPLE COLLISION
+            game.apple_collision();
+            // DRAWING
+            game.snake.draw();
+            game.apples.draw();
+            // END GAME
+            game.detect_endgame();
+        } else {
+            // GAME OVER
+            game.game_over(font);
+        }
         // SCORE
         game.display_score(font);
         // SLEEP
