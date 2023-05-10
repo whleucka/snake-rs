@@ -150,7 +150,17 @@ impl Snake {
         self.head.dy = 0;
     }
     pub fn add_segment(&mut self, x: f32, y: f32) {
-        self.body.as_mut().unwrap().push(Seg::new(x, y));
+        let body = self.body.as_mut().unwrap();
+        let color = match body.len() % 2 == 0 {
+            true => YELLOW,
+            false => GREEN,
+        };
+        body.push(Seg {
+            x,
+            y,
+            color,
+            ..Default::default()
+        });
     }
     pub fn check_collision(&mut self, apples: &mut Vec<Apple>) -> bool {
         let mut found = false;
@@ -261,6 +271,7 @@ impl Game {
                 direction: String::from("right"),
                 head: Seg {
                     color: GREEN,
+                    radius: 12.0,
                     ..Default::default()
                 },
                 body: Some(Vec::<Seg>::new()),
