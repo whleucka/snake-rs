@@ -118,17 +118,17 @@ pub struct Snake {
 
 impl Snake {
     pub fn up(&mut self) {
-        // if &self.direction == "down" {
-        //     return;
-        // }
+        if &self.direction == "down" {
+            return;
+        }
         self.direction = String::from("up");
         self.head.dx = 0;
         self.head.dy = -1;
     }
     pub fn down(&mut self) {
-        // if &self.direction == "up" {
-        //     return;
-        // }
+        if &self.direction == "up" {
+            return;
+        }
         self.direction = String::from("down");
         self.head.dx = 0;
         self.head.dy = 1;
