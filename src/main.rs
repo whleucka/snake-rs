@@ -2,7 +2,7 @@ use crate::rand;
 use macroquad::prelude::*;
 use std::{thread, time};
 
-const DELAY: u64 = 50;
+const DELAY: u64 = 15;
 
 #[derive(Debug)]
 pub struct Apple {
@@ -114,21 +114,33 @@ pub struct Snake {
 
 impl Snake {
     pub fn up(&mut self) {
+        if &self.direction == "down" {
+            return;
+        }
         self.direction = String::from("up");
         self.head.dx = 0;
         self.head.dy = -1;
     }
     pub fn down(&mut self) {
+        if &self.direction == "up" {
+            return;
+        }
         self.direction = String::from("down");
         self.head.dx = 0;
         self.head.dy = 1;
     }
     pub fn left(&mut self) {
+        if &self.direction == "right" {
+            return;
+        }
         self.direction = String::from("left");
         self.head.dx = -1;
         self.head.dy = 0;
     }
     pub fn right(&mut self) {
+        if &self.direction == "left" {
+            return;
+        }
         self.direction = String::from("right");
         self.head.dx = 1;
         self.head.dy = 0;
@@ -217,12 +229,24 @@ impl Snake {
         self.draw_head();
         self.draw_body();
     }
+    pub fn head_collision(&mut self) {
+        self.body.iter_mut().flatten().for_each(|body| {
+            let a = (body.x - self.head.x) as f64;
+            let b = (body.y - self.head.y) as f64;
+            let distance = f64::sqrt(a.powi(2) + b.powi(2));
+            if distance < body.radius as f64 * 2.0 as f64 {
+                println!("You lose!");
+                std::process::exit(0);
+            }
+        });
+    }
 }
 
 #[derive(Debug)]
 pub struct Game {
     snake: Snake,
     apples: Apples,
+    count: i32,
 }
 
 impl Game {
@@ -239,14 +263,15 @@ impl Game {
             apples: Apples {
                 apples: Some(Vec::<Apple>::new()),
             },
+            count: 49,
         }
     }
     pub fn add_apple(&mut self, x: f32, y: f32) {
         self.apples.apples.as_mut().unwrap().push(Apple::new(x, y));
     }
     pub fn random_apple(&mut self) {
-        let x = rand::gen_range(0.0, screen_width());
-        let y = rand::gen_range(0.0, screen_height());
+        let x = rand::gen_range(10.0, screen_width() - 10.0);
+        let y = rand::gen_range(10.0, screen_height() - 10.0);
         self.add_apple(x, y);
     }
     pub fn player_movement(&mut self) {
@@ -260,41 +285,47 @@ impl Game {
             self.snake.right();
         }
     }
+    pub fn apple_collision(&mut self) {
+        let apples = self.apples.apples.as_mut().unwrap();
+        let is_collision = self.snake.check_collision(apples);
+        if is_collision {
+            self.count -= 1;
+            self.random_apple();
+        }
+    }
+    pub fn detect_endgame(&mut self) {
+        if self.count <= 0 {
+            println!("You win!");
+            std::process::exit(0);
+        }
+    }
 }
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
     let mut game = Game::new();
-    let mut apples_remaining: i32 = 50;
     game.random_apple();
-
+    // Main game loop
+    let mut count: u32 = 0;
     loop {
         clear_background(BLACK);
-
-        ///////////////////////////////////////////////////////////////////////
         // RENDER
         game.player_movement();
         game.snake.slither();
-
-        ///////////////////////////////////////////////////////////////////////
-        // APPLE
-        let apples = game.apples.apples.as_mut().unwrap();
-        let is_collision = game.snake.check_collision(apples);
-        if is_collision {
-            apples_remaining -= 1;
-            game.random_apple();
-        }
-
-        ///////////////////////////////////////////////////////////////////////
+        // SELF COLLISION
+        game.snake.head_collision();
+        // APPLE COLLISION
+        game.apple_collision();
         // DRAWING
         game.snake.draw();
         game.apples.draw();
-
-        ///////////////////////////////////////////////////////////////////////
         // END GAME
-        if apples_remaining <= 0 {
-            println!("You win!");
-            std::process::exit(0);
+        game.detect_endgame();
+        // TIMER DELAY
+        count += 1;
+        if count > 100 {
+            count = 0;
+            println!("FPS: {:.1}", get_fps());
         }
         let sleep = time::Duration::from_millis(DELAY);
         thread::sleep(sleep);
