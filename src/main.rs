@@ -2,6 +2,7 @@ use crate::rand;
 use macroquad::prelude::*;
 use std::{thread, time};
 
+// ~60 FPS
 const DELAY: u64 = 15;
 
 #[derive(Debug)]
@@ -323,8 +324,7 @@ async fn main() {
         game.detect_endgame();
         // TIMER DELAY
         count += 1;
-        if count > 100 {
-            count = 0;
+        if count % 100 == 0 {
             println!("FPS: {:.1}", get_fps());
         }
         let sleep = time::Duration::from_millis(DELAY);
