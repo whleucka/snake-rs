@@ -271,7 +271,7 @@ impl Game {
                 direction: String::from("right"),
                 head: Seg {
                     color: GREEN,
-                    radius: 12.0,
+                    radius: 13.0,
                     ..Default::default()
                 },
                 body: Some(Vec::<Seg>::new()),
