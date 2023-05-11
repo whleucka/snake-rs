@@ -9,7 +9,6 @@ const FONT: &str = "./assets/mono.ttf";
 
 #[macroquad::main("Snake")]
 async fn main() {
-    // Load fonts, the order you load fonts is the order it uses for lookups
     let mut game = Game::new();
     let font = load_ttf_font(FONT).await.unwrap();
     game.random_apple();
