@@ -7,7 +7,15 @@ use crate::snake::Game;
 const DELAY: u64 = 15;
 const FONT: &str = "./assets/mono.ttf";
 
-#[macroquad::main("Snake")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "snake-rs".to_owned(),
+        fullscreen: true,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut game = Game::new();
     let font = load_ttf_font(FONT).await.unwrap();
