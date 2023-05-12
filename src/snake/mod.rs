@@ -47,13 +47,13 @@ impl Game {
         self.add_apple(x, y);
     }
     pub fn player_movement(&mut self) {
-        if is_key_down(KeyCode::J) {
+        if is_key_down(KeyCode::J) || is_key_down(KeyCode::Down) {
             self.snake.down();
-        } else if is_key_down(KeyCode::K) {
+        } else if is_key_down(KeyCode::K) || is_key_down(KeyCode::Up) {
             self.snake.up();
-        } else if is_key_down(KeyCode::H) {
+        } else if is_key_down(KeyCode::H) || is_key_down(KeyCode::Left) {
             self.snake.left();
-        } else if is_key_down(KeyCode::L) {
+        } else if is_key_down(KeyCode::L) || is_key_down(KeyCode::Right) {
             self.snake.right();
         }
     }
